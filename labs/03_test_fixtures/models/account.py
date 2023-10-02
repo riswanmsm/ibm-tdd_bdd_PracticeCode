@@ -3,7 +3,7 @@ Account class
 """
 import logging
 from sqlalchemy.sql import func
-from models import db
+from models import db, app
 
 logger = logging.getLogger()
 
@@ -20,7 +20,7 @@ class Account(db.Model):
     email = db.Column(db.String(64))
     phone_number = db.Column(db.String(32), nullable=True)
     disabled = db.Column(db.Boolean(), nullable=False, default=False)
-    date_joined = db.Column(db.Date, nullable=False, server_default=func.now())
+    date_joined = db.Column(db.DateTime, nullable=False, server_default=func.now())
 
     def __repr__(self):
         return '<Account %r>' % self.name
@@ -37,8 +37,9 @@ class Account(db.Model):
     def create(self):
         """Creates an Account in the database"""
         logger.info("Creating %s", self.name)
-        db.session.add(self)
-        db.session.commit()
+        with app.app_context():
+            db.session.add(self)
+            db.session.commit()
 
     def update(self):
         """Updates an Account in the database"""
@@ -61,7 +62,8 @@ class Account(db.Model):
     def all(cls) -> list:
         """Returns all of the Accounts in the database"""
         logger.info("Processing all Accounts")
-        return cls.query.all()
+        with app.app_context():
+            return cls.query.all()
 
     @classmethod
     def find(cls, account_id: int):
